@@ -1,121 +1,131 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useLocalStorage } from './hooks/useLocalStorage'
+
+const VIAJE_INICIAL = {
+  destino: '',
+  origen: '',
+  fechaInicio: '',
+  fechaFin: '',
+  personas: '1',
+}
+
+const aFecha = (texto) => new Date(texto + 'T00:00:00')
+
+const diasEntre = (a, b) => Math.round((aFecha(b) - aFecha(a)) / 86400000)
+
+const hoyTexto = () => {
+  const d = new Date()
+  const mes = String(d.getMonth() + 1).padStart(2, '0')
+  const dia = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}-${mes}-${dia}`
+}
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [viaje, setViaje] = useLocalStorage('agente-viajes:viaje', VIAJE_INICIAL)
+
+  const cambiar = (campo) => (e) => setViaje({ ...viaje, [campo]: e.target.value })
+
+  const fechasOk =
+    viaje.fechaInicio && viaje.fechaFin && viaje.fechaFin >= viaje.fechaInicio
+  const fechasMal =
+    viaje.fechaInicio && viaje.fechaFin && viaje.fechaFin < viaje.fechaInicio
+
+  const noches = fechasOk ? diasEntre(viaje.fechaInicio, viaje.fechaFin) : null
+  const faltan = viaje.fechaInicio ? diasEntre(hoyTexto(), viaje.fechaInicio) : null
+
+  const borrar = () => {
+    if (window.confirm('¿Borrar los datos de este viaje?')) {
+      setViaje(VIAJE_INICIAL)
+    }
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <main className="app">
+      <h1>Agente de viajes</h1>
+      <p className="nota">Se guarda automáticamente en este dispositivo.</p>
+
+      <section className="tarjeta">
+        <h2>Datos del viaje</h2>
+
+        <label>
+          Destino
+          <input
+            type="text"
+            placeholder="Ej: Tokio, Japón"
+            value={viaje.destino}
+            onChange={cambiar('destino')}
+          />
+        </label>
+
+        <label>
+          Ciudad de salida
+          <input
+            type="text"
+            placeholder="Ej: Buenos Aires"
+            value={viaje.origen}
+            onChange={cambiar('origen')}
+          />
+        </label>
+
+        <div className="fila">
+          <label>
+            Fecha de ida
+            <input
+              type="date"
+              value={viaje.fechaInicio}
+              onChange={cambiar('fechaInicio')}
+            />
+          </label>
+          <label>
+            Fecha de vuelta
+            <input
+              type="date"
+              min={viaje.fechaInicio}
+              value={viaje.fechaFin}
+              onChange={cambiar('fechaFin')}
+            />
+          </label>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
+
+        {fechasMal && (
+          <p className="error">La vuelta no puede ser antes de la ida.</p>
+        )}
+
+        <label>
+          Cantidad de personas
+          <input
+            type="number"
+            min="1"
+            value={viaje.personas}
+            onChange={cambiar('personas')}
+          />
+        </label>
       </section>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
+      <section className="tarjeta">
+        <h2>Resumen</h2>
+        <p>
+          <strong>Destino:</strong> {viaje.destino || '—'}
+        </p>
+        <p>
+          <strong>Duración:</strong>{' '}
+          {noches !== null ? `${noches + 1} días / ${noches} noches` : '—'}
+        </p>
+        <p>
+          <strong>Falta para el viaje:</strong>{' '}
+          {faltan === null
+            ? '—'
+            : faltan > 0
+              ? `${faltan} días`
+              : faltan === 0
+                ? '¡Es hoy!'
+                : 'La fecha de ida ya pasó'}
+        </p>
       </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      <button className="borrar" onClick={borrar}>
+        Borrar viaje
+      </button>
+    </main>
   )
 }
 
